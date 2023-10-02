@@ -42,7 +42,7 @@ local function DisableCarBomb()
                     qbCore.Functions.Notify(locale('no_bomb_removed') 'primary', 5000)
                 else
                     armedVeh = nil
-                    TriggerServerEvent('carbomb:GiveDisabledBomb')
+                    TriggerServerEvent('mp-carbomb:GiveDisabledBomb')
                     exports.ox_target:removeGlobalVehicle({ 'yrp_carbomb_removal' })
                     qbCore.Functions.Notify(locale('bomb_removed'), 'success', 5000)
                 end
@@ -58,7 +58,7 @@ local function DisableCarBomb()
     end
 end
 
-RegisterNetEvent('carbomb:CheckIfRequirementsAreMet', function()
+RegisterNetEvent('mp-carbomb:CheckIfRequirementsAreMet', function()
     local veh, dist
     if GetResourceState('qbx_core') ~= 'started' then veh, dist = qbCore.Functions.GetClosestVehicle() else veh, dist = GetClosestVehicle() end
     local animDict = "anim@amb@business@weed@weed_inspecting_lo_med_hi@"
@@ -78,7 +78,7 @@ RegisterNetEvent('carbomb:CheckIfRequirementsAreMet', function()
                 disable = { move = true, car = true, combat = true }
             }) then
                 ClearPedTasksImmediately(ped)
-                TriggerServerEvent('carbomb:RemoveBombFromInv')
+                TriggerServerEvent('mp-carbomb:RemoveBombFromInv')
 
                 if Config.DetonationType == 0 then
                     qbCore.Functions.Notify(locale('timer_det', Config.TimeUntilDetonation), 'primary', 5000)
@@ -141,7 +141,7 @@ RegisterNetEvent('carbomb:CheckIfRequirementsAreMet', function()
     end
 end)
 
-RegisterNetEvent('carbomb:CheckForCarBomb', function()
+RegisterNetEvent('mp-carbomb:CheckForCarBomb', function()
     local veh, dist
     if GetResourceState('qbx_core') ~= 'started' then veh, dist = qbCore.Functions.GetClosestVehicle() else veh, dist = GetClosestVehicle() end
     if not IsPedInAnyVehicle(cache.ped, false) then
