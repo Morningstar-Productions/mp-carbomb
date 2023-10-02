@@ -1,0 +1,18 @@
+{
+    "removing_ied": "Removing IED",
+    "no_bomb_removed": "No bomb was removed",
+    "bomb_removed": "Bomb removed successfully!",
+    "canceled": "Cancelled",
+    "no_vehicle": "No vehicle nearby",
+    "no_inside_vehicle": "You cannot do this from inside a vehicle!",
+    "checking_for_ied": "Checking for IED",
+    "no_bomb_found": "No bomb found on vehicle",
+    "defuse_bomb": "Defuse Car Bomb",
+    "bomb_located": "Bomb located under vehicle!",
+    "arming_ied": "Arming the IED",
+    "timer_det": "The IED will explode in %s",
+    "speed_det": "The IED will explode at the speed of %s %s",
+    "keybind_det": "Make detonate the IED with %s",
+    "veh_timer_det": "The timer will start as soon as someone gets in the car (%s)",
+    "veh_enter_det": "The IED will explode as soon as the driver enters the car"
+}
