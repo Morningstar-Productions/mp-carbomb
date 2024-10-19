@@ -1,29 +1,31 @@
+local config = require 'shared.config'
+
 local timer = 0
 
 local function DetonateVehicle(veh)
     local vCoords = GetEntityCoords(veh)
-    if DoesEntityExist(veh) then
+    if DoesEntityExist(veh) and Entity(veh).state.hasCarBomb then
         Entity(veh).state.hasCarBomb = false
         AddExplosion(vCoords.x, vCoords.y, vCoords.z, 5, 50.0, true, false, 1)
     end
 end
 
 local function RunTimer(veh)
-    timer = Config.TimeUntilDetonation
+    timer = config.timeUntilDetonation
 
     while timer > 0 do
         timer = timer - 1
         Wait(1000)
-        if timer == 0 then DetonateVehicle(veh) end
+        if timer == 0 then
+            DetonateVehicle(veh)
+            break
+        end
     end
 end
 
-local function DisableCarBomb()
-    local veh = lib.getClosestVehicle(GetEntityCoords(cache.ped), 3.0, false)
-
-    if not veh then return lib.notify({ description = locale('no_vehicle'), type = 'error', duration = 5000 }) end
-    if IsPedInAnyVehicle(cache.ped, false) then
-        return lib.notify({ description = locale('no_inside_vehicle'), type = 'error', duration = 2500 })
+local function disableCarBomb(entity)
+    if not Entity(entity).state.hasCarBomb then
+        return config.Notify(locale('no_bomb_removed'), 'info', 5000)
     end
 
     if lib.progressCircle({
@@ -37,35 +39,31 @@ local function DisableCarBomb()
     }) then
         ClearPedTasksImmediately(cache.ped)
 
-        if not Entity(veh).state.hasCarBomb then
-            return lib.notify({ description = locale('no_bomb_removed'), type = 'primary', duration = 5000 })
-        end
-
-        Entity(veh).state.hasCarBomb = false
+        Entity(entity).state.hasCarBomb = false
         local disableBomb = lib.callback.await('mp-carbomb:GiveDisabledBomb', false)
         if not disableBomb then return end
 
         exports.ox_target:removeGlobalVehicle({ 'yrp_carbomb_removal' })
-        lib.notify({ description = locale('bomb_removed'), type = 'success', duration = 5000 })
+        config.Notify(locale('bomb_removed'), 'success', 5000)
     else
         ClearPedTasksImmediately(cache.ped)
-        lib.notify({ description = locale('canceled'), type = 'error', duration = 5000 })
+        config.Notify(locale('canceled'), 'error', 5000)
     end
 end
 
 ---@param veh number
 local function getDetonationType(veh)
-    if Config.DetonationType == 0 then
-        lib.notify({ description = locale('timer_det', Config.TimeUntilDetonation), type = 'primary', duration = 5000 })
+    if config.detonateType == 0 then
+        config.Notify(locale('timer_det', config.timeUntilDetonation), 'info', 5000)
         RunTimer(veh)
-    elseif Config.DetonationType == 1 then
-        lib.notify({ description = locale('speed_det', Config.maxSpeed, Config.Speed), type = 'primary', duration = 5000 })
-    elseif Config.DetonationType == 2 then
-        lib.notify({ description = locale("keybind_det", Config.TriggerKey), type = 'primary', duration = 5000 })
-    elseif Config.DetonationType == 3 then
-        lib.notify({ description = locale('veh_timer_det', Config.TimeUntilDetonation), type = 'primary', duration = 5000 })
-    elseif Config.DetonationType == 4 then
-        lib.notify({ description = locale('veh_enter_det'), type = 'primary', duration = 5000 })
+    elseif config.detonateType == 1 then
+        config.Notify(locale('speed_det', config.maxSpeed, config.speedType), 'info', 5000 )
+    elseif config.detonateType == 2 then
+        config.Notify(locale("keybind_det", config.triggerKey), 'info', 5000 )
+    elseif config.detonateType == 3 then
+        config.Notify(locale('veh_timer_det', config.timeUntilDetonation), 'info', 5000 )
+    elseif config.detonateType == 4 then
+        config.Notify(locale('veh_enter_det'), 'info', 5000 )
     end
 end
 
@@ -74,31 +72,31 @@ local function detonationLoop(veh)
 
     while hasBomb do
         Wait(0)
-        if Config.DetonationType == 1 and hasBomb then
+        if config.detonateType == 1 and hasBomb then
             local speed = GetEntitySpeed(veh)
             local SpeedKMH = speed * 3.6
             local SpeedMPH = speed * 2.236936
 
-            if Config.Speed == 'MPH' then
-                if SpeedMPH >= Config.maxSpeed then
+            if config.speedType == 'mph' then
+                if SpeedMPH >= config.maxSpeed then
                     DetonateVehicle(veh)
                 end
-            elseif Config.Speed == 'KPH' then
-                if SpeedKMH >= Config.maxSpeed then
+            elseif config.speedType == 'KPH' then
+                if SpeedKMH >= config.maxSpeed then
                     DetonateVehicle(veh)
                 end
             end
-        elseif Config.DetonationType == 2 and hasBomb then
-            if IsControlJustReleased(0, Config.TriggerKey) then
+        elseif config.detonateType == 2 and hasBomb then
+            if IsControlJustReleased(0, config.triggerKey) then
                 DetonateVehicle(veh)
             end
-        elseif Config.DetonationType == 3 and hasBomb then
+        elseif config.detonateType == 3 and hasBomb then
             if not IsVehicleSeatFree(veh, -1) then
                 RunTimer(veh)
             elseif not IsVehicleSeatFree(veh, 0) then
                 RunTimer(veh)
             end
-        elseif Config.DetonationType == 4 and hasBomb then
+        elseif config.detonateType == 4 and hasBomb then
             if not IsVehicleSeatFree(veh, -1) then
                 DetonateVehicle(veh)
             end
@@ -111,9 +109,9 @@ local function checkItemRequirements()
     local animDict = "anim@amb@business@weed@weed_inspecting_lo_med_hi@"
     local anim = "weed_spraybottle_crouch_base_inspector"
 
-    if not veh then return lib.notify({ description = locale('no_vehicle'), type = 'error', duration = 5000 }) end
+    if not veh then return config.Notify(locale('no_vehicle'), 'error', 5000) end
     if IsPedInAnyVehicle(cache.ped, false) then
-        return lib.notify({ description = locale('no_inside_vehicle'), type = 'error', duration = 2500 })
+        return config.Notify(locale('no_inside_vehicle'), 'error', 2500)
     end
 
     lib.requestAnimDict(animDict)
@@ -121,7 +119,7 @@ local function checkItemRequirements()
     TaskPlayAnim(cache.ped, animDict, anim, 3.0, 1.0, -1, 0, 1, false, false, false)
 
     if lib.progressCircle({
-        duration = Config.TimeTakenToArm * 1000,
+        duration = config.timeTakenToArm * 1000,
         label = locale('arming_ied'),
         position = 'bottom',
         useWhileDead = false,
@@ -138,33 +136,33 @@ local function checkItemRequirements()
         detonationLoop(veh)
     else
         ClearPedTasksImmediately(cache.ped)
-        lib.notify({ description = locale('canceled'), type = 'error', duration = 5000 })
+        config.Notify(locale('canceled'), 'error', 5000)
     end
 end exports('placeBomb', checkItemRequirements)
 
-local function createRemovalTarget()
-    exports.ox_target:addGlobalVehicle({
+local function createRemovalTarget(entity)
+    exports.ox_target:addEntity(entity, {
         {
             name = 'yrp_carbomb_removal',
             label = locale('defuse_bomb'),
             icon = 'fas fa-cut',
             onSelect = function()
-                DisableCarBomb()
+                disableCarBomb(entity)
             end,
-            canInteract = function(entity, distance)
+            canInteract = function(_, distance)
                 return Entity(entity).state.hasCarBomb and distance <= 2.5
             end,
         }
     })
-    lib.notify({ description = locale('bomb_located'), type = 'info', duration = 5000 })
+    config.Notify(locale('bomb_located'), 'info', 5000)
 end
 
 local function useBombMirror()
     local veh = lib.getClosestVehicle(GetEntityCoords(cache.ped), 3.0, false)
 
-    if not veh then return lib.notify({ description = locale('no_vehicle'), type = 'error', duration = 5000 }) end
+    if not veh then return config.Notify(locale('no_vehicle'), 'error', 5000) end
     if IsPedInAnyVehicle(cache.ped, false) then
-        return lib.notify({ description = locale('no_inside_vehicle'), type = 'error', duration = 2500 })
+        return config.Notify(locale('no_inside_vehicle'), 'error', 2500)
     end
 
     if lib.progressCircle({
@@ -178,12 +176,12 @@ local function useBombMirror()
     }) then
         ClearPedTasksImmediately(cache.ped)
         if not Entity(veh).state.hasCarBomb then
-            lib.notify({ description = locale('no_bomb_found'), type = 'info', duration = 5000 })
+            config.Notify(locale('no_bomb_found'), 'info', 5000)
         end
 
-        createRemovalTarget()
+        createRemovalTarget(veh)
     else
         ClearPedTasksImmediately(cache.ped)
-        lib.notify({ description = locale('canceled'), type = 'error', duration = 5000 })
+        config.Notify(locale('canceled'), 'error', 5000)
     end
 end exports('useBombMirror', useBombMirror)
