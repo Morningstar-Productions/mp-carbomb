@@ -12,5 +12,7 @@ return {
     timeUntilDetonation = 10,
     triggerKey = 47,
     maxSpeed = 50,
-    speedType = 'mph'
+    speedType = 'mph',
+
+    useCompatInventory = true
 }

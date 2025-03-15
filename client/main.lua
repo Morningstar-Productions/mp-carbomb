@@ -140,6 +140,8 @@ local function checkItemRequirements()
     end
 end exports('placeBomb', checkItemRequirements)
 
+RegisterNetEvent('mp-carbomb:client:placeBomb', checkItemRequirements)
+
 local function createRemovalTarget(entity)
     exports.ox_target:addEntity(entity, {
         {
@@ -185,3 +187,5 @@ local function useBombMirror()
         config.Notify(locale('canceled'), 'error', 5000)
     end
 end exports('useBombMirror', useBombMirror)
+
+RegisterNetEvent('mp-carbomb:client:useBombMirror', useBombMirror)
